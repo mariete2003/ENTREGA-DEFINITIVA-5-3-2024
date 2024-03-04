@@ -1,0 +1,229 @@
+#!/usr/bin/python3
+
+import tkinter as tk
+from tkinter import scrolledtext, simpledialog
+import subprocess
+import random
+import turtle
+
+class TerminalApp:
+    def _init_(self, master):
+        self.master = master
+        master.title("Terminal")
+
+        # Configuración de colores
+        self.color_fondo = "white"
+        self.color_texto = "red"
+
+        # Área de texto para mostrar el prompt y la salida
+        self.salida_texto = scrolledtext.ScrolledText(master, width=60, height=20, bg=self.color_fondo, fg=self.color_texto)
+        self.salida_texto.pack()
+
+        # Cuadro de entrada para comandos
+        self.entrada_comando = tk.Entry(master, width=50, bg=self.color_fondo, fg=self.color_texto)
+        self.entrada_comando.pack(pady=10)
+
+        # Botón para ejecutar comandos
+        self.boton_ejecutar = tk.Button(master, text="Ejecutar Comando", command=self.ejecutar_comando, bg=self.color_fondo, fg=self.color_texto)
+        self.boton_ejecutar.pack(pady=10)
+
+        # Prompt a la izquierda
+        self.prompt = ">>> "
+        self.salida_texto.insert(tk.END, self.prompt)
+
+    def ejecutar_comando(self):
+        comando = self.entrada_comando.get()
+
+        # Agregar el comando al área de texto
+        self.salida_texto.insert(tk.END, f"{self.prompt}{comando}\n")
+
+        # Manejar comandos personalizados
+        if comando.lower() == 'salir':
+            self.salida_texto.insert(tk.END, "Saliendo del programa...\n")
+            self.master.destroy()
+        elif comando.lower() == 'mario':
+            self.salida_texto.insert(tk.END, "37 años.\n")
+            # Agregar aquí la lógica para el comando 1
+        elif comando.lower() == 'mkdir':
+            self.ejecutar_mkdir()
+        elif comando.lower() == 'touch':
+            self.ejecutar_touch()
+        elif comando.lower() == 'rm':
+            self.ejecutar_rm()
+        elif comando.lower() == 'rmdir':
+            self.ejecutar_rmdir()
+        elif comando.lower() == 'juegos':
+            self.mostrar_menu_juegos()
+        else:
+            # Ejecutar el comando y capturar la salida
+            try:
+                salida = subprocess.check_output(comando, shell=True, stderr=subprocess.STDOUT, text=True)
+                self.salida_texto.insert(tk.END, f"Salida del comando:\n{salida}\n\n")
+            except subprocess.CalledProcessError as e:
+                # Capturar errores si ocurren
+                self.salida_texto.insert(tk.END, f"Error al ejecutar el comando:\n{e.output}\n\n")
+            except Exception as e:
+                self.salida_texto.insert(tk.END, f"Ocurrió un error inesperado: {e}\n\n")
+
+        # Limpiar la entrada de comando después de ejecutar
+        self.entrada_comando.delete(0, tk.END)
+
+        # Agregar el prompt para el próximo comando
+        self.salida_texto.insert(tk.END, self.prompt)
+
+    def ejecutar_mkdir(self):
+        try:
+            directorio = self.entrada_comando.get().split(' ', 1)[1]  # Obtener el segundo argumento como directorio
+            subprocess.run(['mkdir', directorio], check=True)
+            self.salida_texto.insert(tk.END, f"Se creó el directorio '{directorio}' con éxito.\n\n")
+        except IndexError:
+            self.salida_texto.insert(tk.END, "Error: Proporciona un nombre para el directorio.\n\n")
+        except subprocess.CalledProcessError as e:
+            self.salida_texto.insert(tk.END, f"Error al ejecutar 'mkdir': {e}\n\n")
+
+    def ejecutar_touch(self):
+        try:
+            archivo = self.entrada_comando.get().split(' ', 1)[1]  # Obtener el segundo argumento como archivo
+            subprocess.run(['touch', archivo], check=True)
+            self.salida_texto.insert(tk.END, f"Se creó el archivo '{archivo}' con éxito.\n\n")
+        except IndexError:
+            self.salida_texto.insert(tk.END, "Error: Proporciona un nombre para el archivo.\n\n")
+        except subprocess.CalledProcessError as e:
+            self.salida_texto.insert(tk.END, f"Error al ejecutar 'touch': {e}\n\n")
+
+    def ejecutar_rm(self):
+        try:
+            archivo = self.entrada_comando.get().split(' ', 1)[1]  # Obtener el segundo argumento como archivo
+            subprocess.run(['rm', archivo], check=True)
+            self.salida_texto.insert(tk.END, f"Se eliminó el archivo '{archivo}' con éxito.\n\n")
+        except IndexError:
+            self.salida_texto.insert(tk.END, "Error: Proporciona un nombre para el archivo.\n\n")
+        except subprocess.CalledProcessError as e:
+            self.salida_texto.insert(tk.END, f"Error al ejecutar 'rm': {e}\n\n")
+
+    def ejecutar_rmdir(self):
+        try:
+            directorio = self.entrada_comando.get().split(' ', 1)[1]  # Obtener el segundo argumento como directorio
+            subprocess.run(['rmdir', directorio], check=True)
+            self.salida_texto.insert(tk.END, f"Se eliminó el directorio '{directorio}' con éxito.\n\n")
+        except IndexError:
+            self.salida_texto.insert(tk.END, "Error: Proporciona un nombre para el directorio.\n\n")
+        except subprocess.CalledProcessError as e:
+            self.salida_texto.insert(tk.END, f"Error al ejecutar 'rmdir': {e}\n\n")
+
+    def mostrar_menu_juegos(self):
+        menu_juegos = tk.Menu(self.master)
+        menu_juegos.add_command(label="Adivinar número", command=self.juego_adivinar_numero)
+        menu_juegos.add_command(label="Ahorcado", command=self.juego_ahorcado)
+        menu_juegos.add_command(label="Linux", command=self.dibujar_pinguino)  # Nuevo juego "Linux"
+
+        self.master.config(menu=menu_juegos)
+
+    def juego_adivinar_numero(self):
+        numero_secreto = random.randint(1, 10)
+        intentos = 0
+
+        while True:
+            guess = simpledialog.askinteger("Adivina el número", "Intenta adivinar el número (1-10):")
+            intentos += 1
+
+            if guess is None:
+                self.salida_texto.insert(tk.END, "Juego cancelado.\n\n")
+                return
+
+            if guess == numero_secreto:
+                self.salida_texto.insert(tk.END, f"¡Correcto! Adivinaste el número en {intentos} intentos.\n\n")
+                return
+            elif guess < numero_secreto:
+                self.salida_texto.insert(tk.END, "El número es mayor. Intenta de nuevo.\n")
+            else:
+                self.salida_texto.insert(tk.END, "El número es menor. Intenta de nuevo.\n")
+
+    def juego_ahorcado(self):
+        palabras = ["windows", "sistemas", "programacion", "terminal", "linux", "ubuntu"]
+        palabra_secreta = random.choice(palabras)
+        palabra_oculta = ['_' for _ in palabra_secreta]
+        intentos = 6
+
+        while intentos > 0:
+            letra = simpledialog.askstring("Ahorcado", f"Palabra: {' '.join(palabra_oculta)}\n"
+                                                        f"Intentos restantes: {intentos}\n"
+                                                        "Ingresa una letra:")
+            if letra is None:
+                self.salida_texto.insert(tk.END, "Juego cancelado.\n\n")
+                return
+
+            if len(letra) != 1 or not letra.isalpha():
+                self.salida_texto.insert(tk.END, "Por favor, ingresa una sola letra.\n")
+                continue
+
+            letra = letra.lower()
+
+            if letra in palabra_secreta:
+                for i, char in enumerate(palabra_secreta):
+                    if char == letra:
+                        palabra_oculta[i] = letra
+                if '_' not in palabra_oculta:
+                    self.salida_texto.insert(tk.END, f"¡Felicidades! Adivinaste la palabra: {palabra_secreta}\n\n")
+                    return
+            else:
+                intentos -= 1
+                self.salida_texto.insert(tk.END, f"Incorrecto. Letras incorrectas: {intentos}\n")
+
+        self.salida_texto.insert(tk.END, f"¡Perdiste! La palabra era: {palabra_secreta}\n\n")
+
+    def dibujar_pinguino(self):
+        t = turtle.Turtle()
+        t.speed(0.5)
+        # Cuerpo
+        t.penup()
+        t.goto(-40, -40)
+        t.pendown()
+        t.color("black", "black")
+        t.begin_fill()
+        t.circle(40)
+        t.end_fill()
+        t.penup()
+        t.goto(-30, -40)
+        t.pendown()
+        t.color("white", "white")
+        t.begin_fill()
+        t.circle(30)
+        t.end_fill()
+
+        # Ojos
+        t.penup()
+        t.goto(-25, 0)
+        t.pendown()
+        t.color("black", "black")
+        t.begin_fill()
+        t.circle(5)
+        t.end_fill()      
+        t.penup()
+        t.goto(-15, 0)
+        t.pendown()
+        t.color("black", "black")
+        t.begin_fill()
+        t.circle(5)
+        t.end_fill()
+
+        # Pico
+        t.penup()
+        t.goto(-20, -5)
+        t.pendown()
+        t.color("orange", "orange")
+        t.begin_fill()
+        t.right(90)
+        t.forward(15)
+        t.left(120)
+        t.forward(30)
+        t.left(120)
+        t.forward(30)
+        t.left(120)
+        t.forward(15)
+        t.end_fill()
+
+if _name_ == "_main_":
+    root = tk.Tk()
+    app = TerminalApp(root)
+    root.mainloop()
