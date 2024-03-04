@@ -1,8 +1,9 @@
 # ENTREGA-DEFINITIVA-5-3-2024
 grupo formado por Mario González, Unai Aguirre, Jaime Mas, Lorena Peñas
+-----------------------------------------------------------
 
-# Configuración de colores
-    self.color_fondo = "white"
+ #Configuración de colores
+    self.color_fondo = "white" 
     self.color_texto = "red"
 
     # Área de texto para mostrar el prompt y la salida
